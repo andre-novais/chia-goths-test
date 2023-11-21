@@ -1,12 +1,13 @@
 package internal
 
 import (
+	"html/template"
+	"net/http"
+
 	"github.com/Masterminds/sprig"
 	"github.com/gorilla/csrf"
 	"github.com/rs/zerolog/log"
 	"github.com/unrolled/render"
-	"html/template"
-	"net/http"
 )
 
 type Renderer struct {
@@ -17,7 +18,7 @@ type Renderer struct {
 func (renderer *Renderer) getInstance() *render.Render {
 	if renderer.instance == nil {
 		renderer.instance = render.New(render.Options{
-			Directory:                   "templates",
+			Directory:                   "internal/application/www/templates",
 			Layout:                      "layouts/main",
 			Extensions:                  []string{".gohtml"},
 			IsDevelopment:               EnvVars.DevMode,

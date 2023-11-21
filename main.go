@@ -2,18 +2,25 @@ package main
 
 import (
 	"chia-goths/internal"
+	"chia-goths/internal/application/service"
+	"chia-goths/internal/application/www/handlers"
+	"chia-goths/internal/core"
 	"embed"
 	"fmt"
-	"github.com/gorilla/csrf"
-	"github.com/rs/zerolog"
-	"github.com/rs/zerolog/log"
-	"github.com/unrolled/render"
 	"io/fs"
 	"net/http"
 	"os"
 
+	"github.com/gorilla/csrf"
+	"github.com/rs/zerolog"
+	"github.com/rs/zerolog/log"
+	"github.com/unrolled/render"
+
 	"github.com/go-chi/chi/v5"
 	"github.com/go-chi/chi/v5/middleware"
+
+	"gorm.io/driver/sqlite"
+	"gorm.io/gorm"
 
 	_ "embed"
 )
@@ -21,7 +28,7 @@ import (
 //go:embed assets/*
 var embeddedAssetsFS embed.FS
 
-//go:embed templates/*
+//go:embed internal/application/www/templates/*
 var templatesFS embed.FS
 
 func assetFS() fs.FS {
@@ -42,6 +49,17 @@ func main() {
 
 	configLogger()
 
+	db, err := gorm.Open(sqlite.Open("test.db"), &gorm.Config{})
+	if err != nil {
+		panic("failed to connect database")
+	}
+
+	db.AutoMigrate(&core.Product{})
+	db.AutoMigrate(&core.Checkout{})
+	db.AutoMigrate(&core.Order{})
+	db.AutoMigrate(&core.Account{})
+	db.AutoMigrate(&core.Cart{})
+
 	c := chi.NewRouter()
 	c.Use(middleware.Logger)
 	c.Use(middleware.Recoverer)
@@ -54,6 +72,10 @@ func main() {
 
 	// todo: this assets delivery works but has indexes, best to not list dir contents
 	c.Handle("/assets/*", http.StripPrefix("/assets/", http.FileServer(http.FS(assetFS()))))
+
+	productsService := service.ProdutsService{Db: db}
+
+	controller := handlers.Controller{Renderer: renderer, ProductsService: productsService}
 
 	c.Get("/", func(w http.ResponseWriter, r *http.Request) {
 		renderer.RenderHTML(r, w, "index", nil)
@@ -70,9 +92,11 @@ func main() {
 	c.Post("/csrf-testing", func(w http.ResponseWriter, r *http.Request) {
 		renderer.RenderHTML(r, w, "csrf-testing-post", r.PostForm)
 	})
+	c.Get("/products", controller.ListProducts)
+	c.Post("/products", controller.CreateProduct)
 
-	log.Info().Str("listenAddr", internal.EnvVars.ListenAddr).Msg("starting server")
-	if err := http.ListenAndServe(internal.EnvVars.ListenAddr, csrf.Protect(internal.EnvVars.CSRFKey)(c)); err != nil {
+	log.Info().Str("listenAddr", internal.EnvVars.ListenAddr).Msg("starting server eweeewedaeda")
+	if err := http.ListenAndServe(":3000", csrf.Protect(internal.EnvVars.CSRFKey)(c)); err != nil {
 		panic(fmt.Errorf("failed to listen and serve: %w", err))
 	}
 }

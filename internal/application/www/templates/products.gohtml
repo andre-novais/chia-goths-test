@@ -1,0 +1,16 @@
+<div>
+    <form hx-post="/products" hx-target="#products" hx-include="[name='gorilla.csrf.Token']" hx-swap="beforeend">
+        <div class="flex mb-4">
+            <input type="text" name="name" id="name" class="w-full rounded-l px-4 py-2 outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Name">
+            <input type="text" name="sku" id="sku" class="w-full rounded-l px-4 py-2 outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Sku">
+            <input type="number" name="price" id="price" class="w-full rounded-l px-4 py-2 outline-none focus:ring-blue-500 focus:border-blue-500" placeholder="Price">
+            <button type="submit" class="bg-blue-500 rounded-r text-white px-4 py-2">Submit</button>
+        </div>
+    </form>
+
+    <div id=products>
+    {{ range $product := . }}
+        <div>{{ $product.Slug }}</div>
+    {{end}}
+    </div>
+</div>

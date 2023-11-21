@@ -22,6 +22,10 @@ RUN go build -o chia-goths .
 FROM debian:bullseye-slim
 
 COPY --from=build /app/chia-goths /usr/local/bin/chia-goths
-ENV LISTEN_ADDR=0.0.0.0:8080
+ENV LISTEN_ADDR=localhost:8080
+ENV DEV_MODE=true
+ENV CSRF_KEY=32CharacterStaticKeyForCSRFProte
+
+EXPOSE 3000
 
 ENTRYPOINT ["chia-goths"]
